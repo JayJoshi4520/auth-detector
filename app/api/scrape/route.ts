@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
+import chromium from '@sparticuz/chromium';
 import * as cheerio from 'cheerio';
 import type { Element } from 'domhandler';
 import { html } from 'js-beautify';
@@ -40,15 +41,31 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'URL is required' }, { status: 400 });
         }
 
-        const browser = await puppeteer.launch({
-            headless: true,
-            args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-blink-features=AutomationControlled',
-                '--window-size=1920,1080'
-            ],
-        });
+        let browser;
+
+        if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+            // Vercel / Production environment
+            browser = await puppeteer.launch({
+                args: chromium.args,
+                defaultViewport: (chromium as any).defaultViewport,
+                executablePath: await chromium.executablePath(),
+                headless: (chromium as any).headless,
+            });
+        } else {
+            // Local development (Windows/Mac/Linux)
+            // Note: You must have Chrome installed locally
+            const localPath = process.platform === 'win32'
+                ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+                : process.platform === 'darwin'
+                    ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+                    : '/usr/bin/google-chrome';
+
+            browser = await puppeteer.launch({
+                args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-blink-features=AutomationControlled'],
+                executablePath: localPath,
+                headless: true,
+            });
+        }
 
         const page = await browser.newPage();
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
