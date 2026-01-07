@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import puppeteer from 'puppeteer-core';
-import chromium from '@sparticuz/chromium';
+import chromium from '@sparticuz/chromium-min';
 import * as cheerio from 'cheerio';
 import type { Element } from 'domhandler';
 import { html } from 'js-beautify';
@@ -43,16 +43,19 @@ export async function POST(req: NextRequest) {
 
         let browser;
 
-        if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
-            // Vercel / Production environment
+        if (process.env.VERCEL) {
+            // Vercel environment
+            // We use a remote binary to avoid size limits and missing file errors
+            const remoteExecutablePath = 'https://github.com/Sparticuz/chromium/releases/download/v123.0.1/chromium-v123.0.1-pack.tar';
+
             browser = await puppeteer.launch({
                 args: chromium.args,
                 defaultViewport: (chromium as any).defaultViewport,
-                executablePath: await chromium.executablePath(),
+                executablePath: await chromium.executablePath(remoteExecutablePath),
                 headless: (chromium as any).headless,
             });
         } else {
-            // Local development (Windows/Mac/Linux)
+            // Local development (Windows/Mac/Linux) - works in both dev and production mode
             // Note: You must have Chrome installed locally
             const localPath = process.platform === 'win32'
                 ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
