@@ -31,9 +31,90 @@ function BrutalLoader() {
                     SCANNING TARGET
                 </div>
                 <div className="text-white/50 text-sm font-medium tracking-wide animate-pulse">
-                    Extracting authentication components...
+                    Extracting authentication components...<br />
+                    <p className="text-white/50 text-sm font-medium tracking-wide animate-pulse">Please wait for the scan to complete.
+                        <br /> It may not work fully for some websites with strict bot security. (Examples, Stackoverflow, NY Times, etc..)</p>
                 </div>
             </div>
+        </div>
+    );
+}
+
+
+// Accordion Component
+function BrutalAccordionItem({ component, index }: { component: any, index: number }) {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+        <div className="w-full brutal-card overflow-hidden">
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-full px-6 py-4 flex items-center justify-between bg-[#1a1a1a] hover:bg-[#222] transition-colors"
+            >
+                <div className="flex items-center gap-4">
+                    {component.type === 'traditional' && <div className="w-3 h-3 bg-[#c8ff00] rotate-45"></div>}
+                    {component.type === 'oauth' && <div className="w-3 h-3 bg-[#00ffff] rounded-full"></div>}
+                    {component.type === 'passwordless' && <div className="w-3 h-3 bg-[#ff2281] skew-x-12"></div>}
+
+                    <span className="text-lg font-bold uppercase tracking-widest text-white">
+                        {component.type === 'traditional' ? 'Traditional Auth' :
+                            component.type === 'oauth' ? 'OAuth Providers' : 'Passwordless'}
+                    </span>
+                </div>
+                <div className={`transform transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
+                    <div className="text-[#c8ff00]">▼</div>
+                </div>
+            </button>
+
+            {isOpen && (
+                <div className="p-6 border-t-2 border-white/10 bg-[#111]">
+                    <div className="space-y-6">
+                        {/* Details */}
+                        <div>
+                            <div className="text-[#c8ff00] text-xs font-bold uppercase tracking-widest mb-3">DETAILS</div>
+                            {component.type === 'oauth' && component.details.providers && (
+                                <div className="text-white/80 font-mono text-sm">
+                                    <span className="text-white/50">Providers: </span>
+                                    {component.details.providers.join(', ')}
+                                </div>
+                            )}
+                            {component.type === 'traditional' && component.details.fields && (
+                                <div className="text-white/80 font-mono text-sm">
+                                    <span className="text-white/50">Fields: </span>
+                                    {component.details.fields.join(', ')}
+                                </div>
+                            )}
+                            {component.type === 'passwordless' && component.details.method && (
+                                <div className="text-white/80 font-mono text-sm">
+                                    <span className="text-white/50">Method: </span>
+                                    {component.details.method}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Snippet */}
+                        {component.snippet && (
+                            <div>
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="text-[#c8ff00] text-xs font-bold uppercase tracking-widest">HTML SNIPPET</div>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigator.clipboard.writeText(component.snippet);
+                                        }}
+                                        className="text-[10px] text-white/50 hover:text-white underline decoration-dotted uppercase"
+                                    >
+                                        Copy Code
+                                    </button>
+                                </div>
+                                <div className="bg-black border border-white/20 p-4 font-mono text-xs text-white/60 overflow-x-auto custom-scrollbar max-h-40">
+                                    {component.snippet}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -43,16 +124,21 @@ export default function Home() {
     const [url, setUrl] = useState('');
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<{
+        success: boolean;
         found: boolean;
-        html?: string;
-        message?: string;
-        metadata?: {
-            hasTraditional: boolean;
-            hasOAuth: boolean;
-            brands: string[];
-            count: number;
-        };
-        oauthButtons?: Array<{ brand: string; html: string; text: string }>;
+        components: Array<{
+            type: 'traditional' | 'oauth' | 'passwordless';
+            snippet?: string;
+            details: {
+                fields?: string[];
+                providers?: string[];
+                method?: string;
+            };
+        }>;
+        detectionMethod: string;
+        pageTitle?: string;
+        screenshot?: string;
+        cached?: boolean;
     } | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
@@ -60,6 +146,11 @@ export default function Home() {
     useEffect(() => {
         setMounted(true);
     }, []);
+
+    // Combine all snippets for display
+    const combinedHtml = result?.components
+        .map(c => c.snippet || `<!-- ${c.type} detected -->`)
+        .join('\n\n') || '';
 
     const handleAnalyze = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -85,8 +176,8 @@ export default function Home() {
             }
 
             setResult(data);
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
         } finally {
             setLoading(false);
         }
@@ -149,6 +240,27 @@ export default function Home() {
                                 </>
                             )}
                         </button>
+
+                        <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
+                            <span className="text-white/40 text-xs font-bold uppercase tracking-widest w-full text-center mb-2">TRY SAMPLE TARGETS</span>
+                            {[
+                                { name: 'Vercel', url: 'https://vercel.com/login' },
+                                { name: 'LinkedIn', url: 'https://www.linkedin.com/login' },
+                                { name: 'Box', url: 'https://account.box.com/login' },
+                                { name: 'GitHub', url: 'https://github.com/login' },
+                                { name: 'Facebook', url: 'https://www.facebook.com/login' },
+                                { name: 'Medium', url: 'https://medium.com/m/signin' },
+                            ].map((site) => (
+                                <button
+                                    key={site.name}
+                                    type="button"
+                                    onClick={() => setUrl(site.url)}
+                                    className="brutal-button px-10 py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                                >
+                                    {site.name}
+                                </button>
+                            ))}
+                        </div>
                     </form>
                 </div>
 
@@ -186,33 +298,89 @@ export default function Home() {
                             </div>
                         </div>
 
-                        {!result.found && result.message && (
-                            <p className="text-white/60 text-lg font-medium">{result.message}</p>
+                        {!result.found && (
+                            <p className="text-white/60 text-lg font-medium">No authentication components detected.</p>
                         )}
 
-                        {result.found && result.metadata && (
-                            <div className="flex flex-wrap gap-4 animate-slide-up">
-                                {result.metadata.hasTraditional && (
-                                    <div className="px-4 py-2 bg-white/5 border-2 border-white/20 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                                        <div className="w-2 h-2 bg-[#c8ff00]"></div>
-                                        TRADITIONAL FORM
+                        {result.found && result.components.map((component, idx) => (
+                            <div key={idx} className="w-full brutal-card p-8 animate-slide-up" style={{ animationDelay: `${idx * 0.1}s` }}>
+                                <div className="flex flex-col gap-6">
+                                    {/* Header */}
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex items-center gap-3">
+                                            {component.type === 'traditional' && <div className="p-2 bg-[#c8ff00] text-black"><div className="w-6 h-6 border-2 border-black rotate-45"></div></div>}
+                                            {component.type === 'oauth' && <div className="p-2 bg-[#00ffff] text-black"><div className="w-6 h-6 border-2 border-black rounded-full"></div></div>}
+                                            {component.type === 'passwordless' && <div className="p-2 bg-[#ff2281] text-black"><div className="w-6 h-6 border-2 border-black skew-x-12"></div></div>}
+
+                                            <div>
+                                                <h3 className="text-xl font-bold uppercase tracking-widest text-white">
+                                                    {component.type === 'traditional' ? 'TRADITIONAL AUTH' :
+                                                        component.type === 'oauth' ? 'OAUTH PROVIDERS' : 'PASSWORDLESS'}
+                                                </h3>
+                                                <div className="h-1 w-full bg-white/20 mt-1"></div>
+                                            </div>
+                                        </div>
+
+                                        <div className="px-4 py-1 border border-white/30 text-xs font-mono text-white/50">
+                                            DETECTED
+                                        </div>
                                     </div>
-                                )}
-                                {result.metadata.hasOAuth && (
-                                    <div className="px-4 py-2 bg-white/5 border-2 border-white/20 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                                        <div className="w-2 h-2 bg-[#00ffff]"></div>
-                                        OAUTH / SSO
+
+                                    {/* Details Grid */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <div className="space-y-4">
+                                            <div className="text-[#c8ff00] text-sm font-bold uppercase tracking-widest mb-2">DETAILS</div>
+
+                                            {component.type === 'oauth' && component.details.providers && (
+                                                <div className="flex flex-wrap gap-2">
+                                                    {component.details.providers.map(p => (
+                                                        <div key={p} className="px-4 py-2 bg-[#1a1a1a] border border-[#00ffff] text-[#00ffff] text-sm font-bold uppercase brutal-shadow-sm">
+                                                            {p}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {component.type === 'traditional' && component.details.fields && (
+                                                <div className="flex flex-wrap gap-2">
+                                                    {component.details.fields.map(f => (
+                                                        <div key={f} className="px-4 py-2 bg-[#1a1a1a] border border-[#c8ff00] text-[#c8ff00] text-sm font-bold uppercase brutal-shadow-sm">
+                                                            {f} FIELD
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {component.type === 'passwordless' && component.details.method && (
+                                                <div className="px-4 py-2 bg-[#1a1a1a] border border-[#ff2281] text-[#ff2281] text-sm font-bold uppercase brutal-shadow-sm inline-block">
+                                                    METHOD: {component.details.method}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Snippet Preview */}
+                                        {component.snippet && (
+                                            <div className="space-y-2">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="text-[#c8ff00] text-sm font-bold uppercase tracking-widest">CODE SNIPPET</div>
+                                                    <button
+                                                        onClick={() => navigator.clipboard.writeText(component.snippet!)}
+                                                        className="text-xs text-white/50 hover:text-white underline decoration-dotted"
+                                                    >
+                                                        COPY OP
+                                                    </button>
+                                                </div>
+                                                <div className="bg-[#111] border border-white/20 p-4 font-mono text-xs text-white/70 overflow-x-auto custom-scrollbar max-h-40">
+                                                    {component.snippet}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                )}
-                                {result.metadata.brands.map(brand => (
-                                    <div key={brand} className="px-4 py-2 bg-[#1a1a1a] border-2 border-[#ff2281] text-[#ff2281] text-xs font-bold uppercase tracking-widest brutal-shadow-pink-sm">
-                                        {brand}
-                                    </div>
-                                ))}
+                                </div>
                             </div>
-                        )}
+                        ))}
 
-                        {result.found && result.html && (
+                        {result.found && combinedHtml && (
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
                                 {/* Source Card */}
                                 <div className="brutal-card overflow-hidden flex flex-col h-[500px] animate-slide-in-left">
@@ -221,7 +389,7 @@ export default function Home() {
                                             {'<'} HTML SOURCE {'>'}
                                         </span>
                                         <button
-                                            onClick={() => navigator.clipboard.writeText(result.html!)}
+                                            onClick={() => navigator.clipboard.writeText(combinedHtml)}
                                             className="brutal-button-outline px-4 py-2 text-xs"
                                         >
                                             COPY
@@ -239,13 +407,13 @@ export default function Home() {
                                             }}
                                             wrapLongLines={true}
                                         >
-                                            {result.html}
+                                            {combinedHtml}
                                         </SyntaxHighlighter>
                                     </div>
                                 </div>
 
                                 {/* Preview Card */}
-                                <div className="brutal-card-accent overflow-hidden flex flex-col h-[500px] animate-slide-in-left" style={{ animationDelay: '0.1s' }}>
+                                {/* <div className="brutal-card-accent overflow-hidden flex flex-col h-[500px] animate-slide-in-left" style={{ animationDelay: '0.1s' }}>
                                     <div className="px-6 py-4 border-b-3 border-[#c8ff00] bg-[#1a1a1a] flex items-center justify-between">
                                         <span className="text-sm font-bold uppercase tracking-widest text-[#c8ff00]">
                                             ISOLATED PREVIEW
@@ -258,10 +426,10 @@ export default function Home() {
                                     </div>
                                     <div className="flex-1 relative bg-white">
                                         <div className="absolute inset-0 overflow-auto p-8 flex items-center justify-center text-black">
-                                            <div className="w-full max-w-sm" dangerouslySetInnerHTML={{ __html: result.html }} />
+                                            <div className="w-full max-w-sm" dangerouslySetInnerHTML={{ __html: combinedHtml }} />
                                         </div>
                                     </div>
-                                </div>
+                                </div> */}
                             </div>
                         )}
                     </div>
