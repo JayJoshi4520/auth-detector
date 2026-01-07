@@ -52,7 +52,7 @@ export class BrowserPool {
                 return await playwrightCore.chromium.launch({
                     args: chromium.args,
                     executablePath,
-                    headless: chromium.headless as any,
+                    headless: true,
                 }) as unknown as Browser;
             } else {
                 logger.info(requestId, 'BROWSER_LAUNCH_LOCAL', {
