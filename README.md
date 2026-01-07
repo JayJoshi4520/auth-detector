@@ -72,14 +72,13 @@ npm run lint     # Run ESLint
 
 1. https://account.box.com/login **(SaaS)**
 2. https://github.com/login **(SaaS)**
-3. https://stackoverflow.com/users/login **(Blogs)**
+3. https://www.reddit.com/login/ **(Blogs)**
 4. https://substack.com/sign-in **(Blogs)**
 5. https://www.facebook.com/login **(Social)**
 6. https://www.linkedin.com/login **(Social)**
-7. https://www.amazon.com/ap/signin?openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fwww.amazon.com%2F%3Fref_%3Dnav_ya_signin&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.assoc_handle=usflex&openid.mode=checkid_setup&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0 **(E-Commerce)**
-8. https://identity.walmart.com/account/login?client_id=5f3fb121-076a-45f6-9587-249f0bc160ff&redirect_uri=https%3A%2F%2Fwww.walmart.com%2Faccount%2FverifyToken&scope=openid+email+offline_access&tenant_id=elh9ie&state=%2F&code_challenge=4ES0ihNkr2uO1wsSAchvCGt5Hw6j-pcXZUbgUystzRk **(E-Commerce)**
-9. https://login.disney.com/en-US/US/DATG-OTV.KABC.WEB/interaction **(NEWS)**
-10. https://auth.usnews.com/login?client_id=2q17ud509vvjvs5svj5ql4tt1q&response_type=code&scope=openid+email+profile+aws.cognito.signin.user.admin&redirect_uri=https://www.usnews.com/login-redirect **(NEWS)**
+7. https://www.flipkart.com/account/login **(E-Commerce)**
+8. https://auth.ndtv.com/w/sso.html **(NEWS)**
+10. https://timesofindia.indiatimes.com/login.cms?newlook=1&signin=1 **(NEWS)**
 
 
 
