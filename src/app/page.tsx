@@ -42,7 +42,18 @@ function BrutalLoader() {
 export default function Home() {
     const [url, setUrl] = useState('');
     const [loading, setLoading] = useState(false);
-    const [result, setResult] = useState<{ found: boolean; html?: string; message?: string } | null>(null);
+    const [result, setResult] = useState<{
+        found: boolean;
+        html?: string;
+        message?: string;
+        metadata?: {
+            hasTraditional: boolean;
+            hasOAuth: boolean;
+            brands: string[];
+            count: number;
+        };
+        oauthButtons?: Array<{ brand: string; html: string; text: string }>;
+    } | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
 
@@ -177,6 +188,28 @@ export default function Home() {
 
                         {!result.found && result.message && (
                             <p className="text-white/60 text-lg font-medium">{result.message}</p>
+                        )}
+
+                        {result.found && result.metadata && (
+                            <div className="flex flex-wrap gap-4 animate-slide-up">
+                                {result.metadata.hasTraditional && (
+                                    <div className="px-4 py-2 bg-white/5 border-2 border-white/20 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                                        <div className="w-2 h-2 bg-[#c8ff00]"></div>
+                                        TRADITIONAL FORM
+                                    </div>
+                                )}
+                                {result.metadata.hasOAuth && (
+                                    <div className="px-4 py-2 bg-white/5 border-2 border-white/20 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                                        <div className="w-2 h-2 bg-[#00ffff]"></div>
+                                        OAUTH / SSO
+                                    </div>
+                                )}
+                                {result.metadata.brands.map(brand => (
+                                    <div key={brand} className="px-4 py-2 bg-[#1a1a1a] border-2 border-[#ff2281] text-[#ff2281] text-xs font-bold uppercase tracking-widest brutal-shadow-pink-sm">
+                                        {brand}
+                                    </div>
+                                ))}
+                            </div>
                         )}
 
                         {result.found && result.html && (
