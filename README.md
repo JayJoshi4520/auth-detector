@@ -27,6 +27,11 @@ A **Neo-Brutalist** web application that extracts authentication components from
 ```bash
 git clone https://github.com/JayJoshi4520/auth-detector.git
 cd auth-detector
+cp .env.example .env
+```
+#### Update your Gemini API Key in .env file.
+```
+GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
 ### 2. Install dependencies
